@@ -1,12 +1,13 @@
 import React from "react";
+import ReactDOM from "react-dom";
 import Card from "./Card";
 import Button from "./Button";
 import classes from "./ErrorModal.module.css";
 
 const ErrorModal = (props) => {
-  return (
-    <div>
-      <div className={classes.backdrop} />
+  const Backdrop = () => <div className={classes.backdrop} />;
+  const ModalLayout = () => {
+    return (
       <Card className={classes.modal}>
         <header className={classes.header}>
           <h2>{props.title}</h2>
@@ -15,12 +16,24 @@ const ErrorModal = (props) => {
           <p>{props.message}</p>
         </div>
         <footer className={classes.actions}>
-          <Button type={"button"}  onClick={props.onConfirm}>
+          <Button type={"button"} onClick={props.onConfirm}>
             Okay
           </Button>
         </footer>
       </Card>
-    </div>
+    );
+  };
+  return (
+    <React.Fragment>
+      {ReactDOM.createPortal(
+        <Backdrop />,
+        document.getElementById("backdrop-root")
+      )}
+      {ReactDOM.createPortal(
+        <ModalLayout onConfirm = {props.onConfirm} title = {props.title} message={props.message}/>,
+        document.getElementById("modal-root")
+      )}
+    </React.Fragment>
   );
 };
 
