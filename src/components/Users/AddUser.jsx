@@ -1,54 +1,65 @@
-import React from "react";
+import React, { useRef } from "react";
 import Button from "../UI/Button";
 import ErrorModal from "../UI/ErrorModal";
 import classes from "./AddUser.module.css";
 import { useState } from "react";
 import Card from "../UI/Card";
 
-const initialInput = {
-  age: "",
-  username: "",
-};
-
 const AddUser = ({ onAddUser }) => {
-  const [inputData, setInputData] = useState(initialInput);
   const [error, setError] = useState();
-
-  const clickHandler = () => {
-    setError();
-  };
-
-  const changeHandler = (name, value) => {
-    setInputData((prevUserInput) => {
-      return { ...prevUserInput, [name]: value };
-    });
-  };
+  const [errorField, setErrorField] = useState();
+  const usernameInputRef = useRef();
+  const ageInputRef = useRef();
 
   const submitHandler = (event) => {
     event.preventDefault();
-    if (
-      inputData["username"].trim().length === 0 ||
-      inputData["age"].trim().length === 0
-    ) {
+    const username = usernameInputRef.current.value.trim();
+    const userAge = ageInputRef.current.value.trim();
+
+    setErrorField(() => {
+      return username.length === 0
+        ? usernameInputRef.current
+        : ageInputRef.current;
+    });
+
+    if (username.length === 0 || userAge.length === 0) {
       setError({
         title: "Invalid Input",
-        message: "Please enter valid input (non-empty value)",
+        message: `Please enter valid ${
+          username.length === 0 ? "username" : "age"
+        } (non-empty value)`,
       });
       return;
     }
-    if (+inputData["age"] < 1) {
+    if (+userAge < 1) {
       setError({
         title: "Invalid Age",
         message: "Please enter valid Age (>0)",
       });
       return;
     }
-    onAddUser(inputData);
-    setInputData(initialInput);
+    onAddUser({ name: username, age: userAge, key: Math.random() });
+    usernameInputRef.current.value = "";
+    ageInputRef.current.value = "";
+    setErrorField();
+    usernameInputRef.current.focus();
   };
+
+  const clickHandler = () => {
+    setError();
+  };
+
+  if (errorField) errorField.focus();
+
   return (
-    <div>
-      {error && <ErrorModal title={error.title} message={error.message} onConfirm={clickHandler}/>}
+    <React.Fragment>
+      {error && (
+        <ErrorModal
+          title={error.title}
+          message={error.message}
+          onConfirm={clickHandler}
+        />
+      )}
       <Card className={classes.input}>
         <form onSubmit={submitHandler}>
           <label htmlFor="username">Username</label>
@@ -56,25 +67,14 @@ const AddUser = ({ onAddUser }) => {
             type="text"
             name="username"
             id="username"
-            onChange={(event) =>
-              changeHandler(event.target.id, event.target.value)
-            }
-            value={inputData["username"]}
+            ref={usernameInputRef}
           />
           <label htmlFor="age">Age(Years)</label>
-          <input
-            type="number"
-            name="age"
-            id="age"
-            onChange={(event) =>
-              changeHandler(event.target.id, event.target.value)
-            }
-            value={inputData["age"]}
-          />
+          <input type="number" name="age" id="age" ref={ageInputRef} />
           <Button type={"submit"}>Add User</Button>
         </form>
       </Card>
-    </div>
+    </React.Fragment>
   );
 };
 
